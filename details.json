@@ -1,0 +1,167 @@
+{
+    "disease_map": {
+        "fever": "General Physician",
+        "cold": "General Physician",
+        "flu": "General Physician",
+        "headache": "General Physician",
+        "heart": "Cardiologist",
+        "chest pain": "Cardiologist",
+        "hypertension": "Cardiologist",
+        "bone": "Orthopedic",
+        "fracture": "Orthopedic",
+        "joint pain": "Orthopedic",
+        "stomach": "Gastroenterologist",
+        "digestion": "Gastroenterologist",
+        "acidity": "Gastroenterologist",
+        "skin": "Dermatologist",
+        "rash": "Dermatologist",
+        "allergy": "Dermatologist",
+        "brain": "Neurologist",
+        "nerves": "Neurologist",
+        "baby": "Pediatrician",
+        "child": "Pediatrician",
+        "infant": "Pediatrician",
+        "ear pain": "ENT Specialist",
+        "throat": "ENT Specialist",
+        "nose": "ENT Specialist",
+        "pregnancy": "Gynecologist",
+        "periods": "Gynecologist",
+        "thyroid": "Endocrinologist",
+        "diabetes": "Endocrinologist",
+        "kidney": "Nephrologist",
+        "old age weakness": "Geriatrician", 
+        "dementia": "Geriatrician"
+    },
+    "doctors": [
+        {
+            "id": 101,
+            "name": "Dr. Ramesh Sharma",
+            "degree": "MBBS, MD (Internal Medicine)",
+            "specialty": "General Physician",
+            "experience": "12 Years",
+            "fee": 500,
+            "weekly_schedule": [
+                {
+                    "date": "26/02/26",
+                    "status": "Available",
+                    "slots": ["10:00 AM", "11:00 AM", "01:00 PM"]
+                },
+                {
+                    "date": "27/02/26",
+                    "status": "Available",
+                    "slots": ["10:30 AM", "12:30 PM"]
+                },
+                {
+                    "date": "28/02/26",
+                    "status": "Not Available",
+                    "slots": []
+                },
+                {
+                    "date": "01/03/26",
+                    "status": "Closed",
+                    "slots": []
+                },
+                {
+                    "date": "02/03/26",
+                    "status": "Available",
+                    "slots": ["10:00 AM", "12:00 PM"]
+                },
+                {
+                    "date": "03/03/26",
+                    "status": "Half Day",
+                    "slots": ["10:00 AM"]
+                }
+            ]
+        },
+        {
+            "id": 102,
+            "name": "Dr. Sneha Reddy",
+            "degree": "MBBS, MD, DM (Cardiology)",
+            "specialty": "Cardiologist",
+            "experience": "15 Years",
+            "fee": 1200,
+            "weekly_schedule": [
+                {
+                    "date": "26/02/26",
+                    "status": "Available",
+                    "slots": ["04:00 PM", "05:30 PM", "07:00 PM"]
+                },
+                {
+                    "date": "27/02/26",
+                    "status": "Available",
+                    "slots": ["04:00 PM", "06:00 PM"]
+                },
+                {
+                    "date": "01/03/26",
+                    "status": "Closed",
+                    "slots": []
+                }
+            ]
+        },
+        {
+            "id": 103,
+            "name": "Dr. Amit Verma",
+            "degree": "MBBS, MS (Orthopedics)",
+            "specialty": "Orthopedic",
+            "experience": "8 Years",
+            "fee": 700,
+            "weekly_schedule": [
+                {
+                    "date": "26/02/26",
+                    "status": "Available",
+                    "slots": ["11:00 AM", "01:00 PM", "09:00 PM"]
+                },
+                {
+                    "date": "01/03/26",
+                    "status": "Emergency Only",
+                    "slots": ["12:00 PM"]
+                }
+            ]
+        },
+        {
+            "id": 108,
+            "name": "Dr. Anjali Gupta",
+            "degree": "MBBS, MD (Pediatrics)",
+            "specialty": "Pediatrician",
+            "experience": "10 Years",
+            "fee": 600,
+            "weekly_schedule": [    
+                {
+                    "date": "26/02/26",
+                    "status": "Available",
+                    "slots": ["10:00 AM", "12:00 PM", "05:00 PM"]
+                },
+                {
+                    "date": "27/02/26",
+                    "status": "Available",
+                    "slots": ["11:00 AM", "01:00 PM"]
+                },
+                {
+                    "date": "28/02/26",
+                    "status": "Available",
+                    "slots": ["10:00 AM", "12:00 PM"]
+                }
+            ]
+        },
+        {
+            "id": 109,
+            "name": "Dr. Vikram Sethi",
+            "degree": "MBBS, MS (ENT)",
+            "specialty": "ENT Specialist",
+            "experience": "9 Years",
+            "fee": 550,
+            "weekly_schedule": [
+                {
+                    "date": "26/02/26",
+                    "status": "Available",
+                    "slots": ["11:00 AM", "01:00 PM"]
+                },
+                {
+                    "date": "27/02/26",
+                    "status": "Available",
+                    "slots": ["04:00 PM", "06:00 PM"]
+                }
+            ]
+        }
+    ]
+}

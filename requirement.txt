@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+aiosqlite
+python-dotenv
+pydantic
+groq
+gspread
+oauth2client
+python-dotenv
