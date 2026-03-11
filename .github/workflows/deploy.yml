@@ -1,4 +1,40 @@
-name: Deploy to AWS ECR
+# name: Deploy to AWS ECR
+
+# on:
+#   push:
+#     branches: [ "main" ]
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: eu-north-1
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v1
+
+#       - name: Build, Tag, and Push Image to ECR
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           ECR_REPOSITORY: new-repo-movie
+#           IMAGE_TAG: latest
+#         run: |
+#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+#'''If you add this extra step to your YAML file, as soon as you push the code to GitHub, the image will build, go to ECR, and Lambda will automatically update with the new image. You won't need to open the AWS Console repeatedly.'''
+
+name: Deploy to AWS ECR and Update Lambda
 
 on:
   push:
@@ -23,6 +59,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, Tag, and Push Image to ECR
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: new-repo-movie
@@ -30,3 +67,10 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Update Lambda Function
+        run: |
+          aws lambda update-function-code \
+            --function-name my_NewFunction \
+            --image-uri ${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
