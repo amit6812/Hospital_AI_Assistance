@@ -5,7 +5,7 @@ import re
 
 def make_voice_friendly(text):
     """
-    Technical tags aur symbols ko voice-friendly banata hai.
+    Technical tags and symbols
     """
     if not text:
         return ""

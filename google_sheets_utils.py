@@ -28,7 +28,7 @@ def get_sheet():
 
 def log_booking(doctor, date, time, booking_id, patient_name, age, mobile, address):
     """
-    Sabhi 8 fields ko Google Sheet mein save karta hai.
+    Saves all 8 fields to a Google Sheet.
     """
     sheet = get_sheet()
     if sheet:

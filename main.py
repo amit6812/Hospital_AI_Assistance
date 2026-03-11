@@ -13,6 +13,10 @@ from twilio.rest import Client
 import os
 from dotenv import load_dotenv
 
+from mangum import Mangum  # For AWS Lambda deployment*************************
+
+
+
 
 # ---------- APP LIFESPAN ----------
 @asynccontextmanager
@@ -26,15 +30,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
 
+
 # ---------- REQUEST MODEL ----------
 class AgentRequest(BaseModel):
     message: str
     session_id: str | None = None
-
-
-# ---------- RANDOM HOSPITAL LIST ----------
-
-
 
 
 
@@ -232,3 +232,4 @@ def make_call():
 
     return {"status": "Call initiated", "call_sid": call.sid}
 
+handler = Mangum(app)  # handler for AWS Lambda**************************************
