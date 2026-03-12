@@ -12,7 +12,6 @@ from db import init_db
 from twilio.rest import Client
 import os
 from dotenv import load_dotenv
-
 from mangum import Mangum  # For AWS Lambda deployment*************************
 
 

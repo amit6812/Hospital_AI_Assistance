@@ -8,5 +8,5 @@ COPY . .
 
 #EXPOSE 8000
 
-CMD [ "main.handler" ]
+CMD ["main.handler"]
 #CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
