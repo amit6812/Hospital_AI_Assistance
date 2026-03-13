@@ -60,12 +60,16 @@ def normalize_speech_text(text: str) -> str:
 
 
 @app.get("/ping")
-def ping():
+async def ping():
+    return Response(content= "alive", status_code=200)
+
+
+@app.post("/invocations")
+async def invoctions(data: AgentRequest):
     """
-    Simple health check endpoint.
-    Returns 200 OK if API is running.
+    Sagemaker calls this endpoint for real time inference
     """
-    return {"status": "alive"}
+    return  await agent_talk(data)
 
 # ---------- MAIN CHAT ENDPOINT ----------
 
