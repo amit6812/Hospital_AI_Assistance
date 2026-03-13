@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.future import select
 import random
@@ -12,12 +12,18 @@ from db import init_db
 from twilio.rest import Client
 import os
 from dotenv import load_dotenv
+import re
+from fastapi import Request
+from fastapi.responses import Response
+from twilio.twiml.voice_response import VoiceResponse, Gather
 
 
+# Load ENV variable from .env file
 
-
+load_dotenv()
 
 # ---------- APP LIFESPAN ----------
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: create tables
@@ -29,7 +35,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
 
-
 # ---------- REQUEST MODEL ----------
 class AgentRequest(BaseModel):
     message: str
@@ -37,7 +42,33 @@ class AgentRequest(BaseModel):
 
 
 
+def normalize_speech_text(text: str) -> str:
+    if not text:
+        return text
+
+    text = text.lower()
+
+    # Fix common STT formatting issues
+    text = text.replace("p.m.", "PM")
+    text = text.replace("a.m.", "AM")
+
+    # Fix weird spaced numbers like "23 0226"
+    #text = re.sub(r"(\d{1,2})\s+0?(\d{2})(\d{2})", r"\1/\2/\3", text)
+    text = re.sub(r"\s+", " ", text)  # Collapse multiple spaces
+
+    return text.strip()
+
+
+@app.get("/ping")
+def ping():
+    """
+    Simple health check endpoint.
+    Returns 200 OK if API is running.
+    """
+    return {"status": "alive"}
+
 # ---------- MAIN CHAT ENDPOINT ----------
+
 @app.post("/agent/talk")
 async def agent_talk(data: AgentRequest):
 
@@ -94,28 +125,7 @@ async def agent_talk(data: AgentRequest):
             "session_id": current_session_id
         }
 
-from fastapi import Request
-from fastapi.responses import Response
-from twilio.twiml.voice_response import VoiceResponse, Gather
 
-
-import re
-
-def normalize_speech_text(text: str) -> str:
-    if not text:
-        return text
-
-    text = text.lower()
-
-    # Fix common STT formatting issues
-    text = text.replace("p.m.", "PM")
-    text = text.replace("a.m.", "AM")
-
-    # Fix weird spaced numbers like "23 0226"
-    #text = re.sub(r"(\d{1,2})\s+0?(\d{2})(\d{2})", r"\1/\2/\3", text)
-    text = re.sub(r"\s+", " ", text)  # Collapse multiple spaces
-
-    return text.strip()
 
 @app.post("/voice")
 async def voice_handler(request: Request):
@@ -193,7 +203,7 @@ async def voice_handler(request: Request):
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",          # ✅ Indian English
+                language="en-IN",          #Indian English
                 speechModel="phone_call",
                 action="/voice",
                 method="POST"
@@ -209,10 +219,9 @@ async def voice_handler(request: Request):
 
 from twilio.rest import Client
 
-# .env file load karein
-load_dotenv()
 
-# Variables ko environment se fetch karein
+# Load ENV variable from .env file
+
 ACCOUNT_SID = os.getenv("ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
@@ -231,6 +240,10 @@ def make_call():
 
     return {"status": "Call initiated", "call_sid": call.sid}
 
+# ---------- DEPLOYMENT SETTINGS ----------
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # SageMaker requires port 8080
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
