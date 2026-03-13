@@ -37,23 +37,22 @@ jobs:
       - name: Update SageMaker Endpoint
         run: |
           # 1. New Model Name create  (With Unique timestamp to avoid conflicts)
-          MODEL_NAME="hospital-AI-model-$(date +%Y%m%d%H%M%S)"
+          TIME_STAMP=$(date +%Y%m%d%H%M%S)
+          MODEL_NAME="hospital-AI-model-$TIME_STAMP"
+          CONFIG_NAME="hospital-config-$TIME_STAMP"
           
+          # 2 Create Model
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
             --primary-container Image=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest \
             --execution-role-arn arn:aws:iam::509157248732:role/Movies_IAM_Role
 
-          # 2. Create Endpoint Configuration
-          CONFIG_NAME="hospital-config-$(date +%Y%m%d%H%M%S)"
-          
+          # 3. Create Endpoint Configuration
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
-
             --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.t2.medium
 
-          # 3.Update For Existing Endpoint
-          # 4.If you are deploying for the first time then 'create-endpoint' will be used, to update 'update-endpoint' 
+          # 4.Update For Existing Endpoint 
             aws sagemaker update-endpoint\
             --endpoint-name hospital-agent-endpoint \
             --endpoint-config-name $CONFIG_NAME
