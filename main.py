@@ -114,7 +114,7 @@ async def agent_talk(data: AgentRequest):
 
         final_reply = make_voice_friendly(reply)
 
-        # ---------- SAVE CHAT HISTORY ----------
+        # ---------- SAVE CHAT HISTORY. ----------
         session.history = (session.history or "") + \
             f"\nPatient: {data.message}\nAI: {reply}"
 
