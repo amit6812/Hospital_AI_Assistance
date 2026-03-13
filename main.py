@@ -59,17 +59,17 @@ def normalize_speech_text(text: str) -> str:
     return text.strip()
 
 
+@app.post("/invocations")
+async def invocations(request: Request):
+    """SageMaker calls this for predictions"""
+    payload = await request.json()
+    data = AgentRequest(**payload)
+    return await agent_talk(data)
+
+# Ensure ping returns a simple 200 OK
 @app.get("/ping")
 async def ping():
-    return Response(content= "alive", status_code=200)
-
-
-@app.post("/invocations")
-async def invoctions(data: AgentRequest):
-    """
-    Sagemaker calls this endpoint for real time inference
-    """
-    return  await agent_talk(data)
+    return Response(content="alive", status_code=200)
 
 # ---------- MAIN CHAT ENDPOINT ----------
 
