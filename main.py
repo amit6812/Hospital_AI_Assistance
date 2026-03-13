@@ -22,7 +22,7 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 
 load_dotenv()
 
-# ---------- APP LIFESPAN ----------
+# ---------- APP LIFESPAN -----
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -71,7 +71,7 @@ async def invocations(request: Request):
 async def ping():
     return Response(content="alive", status_code=200)
 
-# ---------- MAIN CHAT ENDPOINT ----------
+# ---------- MAIN CHAT ENDPOINT ----
 
 @app.post("/agent/talk")
 async def agent_talk(data: AgentRequest):
