@@ -50,7 +50,7 @@ jobs:
           # 3. Create Endpoint Configuration
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
-            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.t2.medium
+            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.t3.medium
 
           # 4.Update For Existing Endpoint 
             aws sagemaker update-endpoint\
