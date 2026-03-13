@@ -12,7 +12,7 @@ from db import init_db
 from twilio.rest import Client
 import os
 from dotenv import load_dotenv
-from mangum import Mangum  # For AWS Lambda deployment*************************
+
 
 
 
@@ -151,8 +151,8 @@ async def voice_handler(request: Request):
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",              # ✅ Indian English
-                speechModel="phone_call",      # ✅ Better phone accuracy
+                language="en-IN",              # Indian English
+                speechModel="phone_call",      # Better phone accuracy
                 action="/voice",
                 method="POST"
             )
@@ -179,8 +179,8 @@ async def voice_handler(request: Request):
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",          # ✅ Indian English
-                speechModel="phone_call",  # ✅ Better recognition
+                language="en-IN",          # For Indian English
+                speechModel="phone_call",  # For Better recognition
                 action="/voice",
                 method="POST"
             )
@@ -231,4 +231,6 @@ def make_call():
 
     return {"status": "Call initiated", "call_sid": call.sid}
 
-handler = Mangum(app)  # handler for AWS Lambda**************************************
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)

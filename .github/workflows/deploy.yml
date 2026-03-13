@@ -1,11 +1,4 @@
-#         run: |
-#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-
-#'''If you add this extra step to your YAML file, as soon as you push the code to GitHub, the image will build, go to ECR, and Lambda will automatically update with the new image. You won't need to open the AWS Console repeatedly.'''
-
-name: Deploy to AWS ECR and Update Lambda
+name: Deploy to AWS ECR and Update SageMaker
 
 on:
   push:
@@ -40,8 +33,27 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Update Lambda Function
+      # SageMaker Endpoint Update Logic
+      - name: Update SageMaker Endpoint
         run: |
-          aws lambda update-function-code \
-            --function-name my_NewFunction \
-            --image-uri ${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
+          # 1. New Model Name create  (With Unique timestamp to avoid conflicts)
+          MODEL_NAME="hospital-AI-model-$(date +%Y%m%d%H%M%S)"
+          
+          aws sagemaker create-model \
+            --model-name $MODEL_NAME \
+            --primary-container Image=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest \
+            --execution-role-arn arn:aws:iam::509157248732:role/Movies_IAM_Role
+
+          # 2. Create Endpoint Configuration
+          CONFIG_NAME="hospital-config-$(date +%Y%m%d%H%M%S)"
+          
+          aws sagemaker create-endpoint-config \
+            --endpoint-config-name $CONFIG_NAME \
+
+            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.t2.medium
+
+          # 3.Update For Existing Endpoint
+          # 4.If you are deploying for the first time then 'create-endpoint' will be used, to update 'update-endpoint' 
+            aws sagemaker update-endpoint\
+            --endpoint-name hospital-agent-endpoint \
+            --endpoint-config-name $CONFIG_NAME
