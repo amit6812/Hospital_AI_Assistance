@@ -31,34 +31,33 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # SageMaker Endpoint Update Logic
-      - name: Update SageMaker Endpoint
+      - name: Create or Update SageMaker Endpoint
         run: |
-          # 1. New Model Name create  (With Unique timestamp to avoid conflicts)
+          # 1. Variables (Note: '=' ke beech mein space nahi hona chahiye)
           TIME_STAMP=$(date +%Y%m%d%H%M%S)
           MODEL_NAME="hospital-AI-model-$TIME_STAMP"
           CONFIG_NAME="hospital-config-$TIME_STAMP"
-          ENDPOINT_NAME = "hospital-agent-endpoint"
-          
-          # 2 Create Model
+          ENDPOINT_NAME="hospital-agent-endpoint"
+          ROLE_ARN="arn:aws:iam::509157248732:role/Movies_IAM_Role"
+
+          # 2. Create Model
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
             --primary-container Image=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest \
-            --execution-role-arn arn:aws:iam::509157248732:role/Movies_IAM_Role
+            --execution-role-arn $ROLE_ARN
 
-          # 3. Create Endpoint Configuration
+          # 3. Create Endpoint Configuration (Stockholm region compatible)
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
             --production-variants "VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large"
 
-          # 4.Check whether the endpoint exists or not
-          if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&; then
+          # 4. Smart Logic: Check whether the endpoint exists or not
+          if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
             echo "Endpoint exists. Updating..."
-            aws sagemaker update-endpoint\
-            --endpoint-name hospital-agent-endpoint \
-            --endpoint-config-name $CONFIG_NAME
+            aws sagemaker update-endpoint \
+              --endpoint-name $ENDPOINT_NAME \
+              --endpoint-config-name $CONFIG_NAME
           else
             echo "Endpoint does not exist. Creating..."
             aws sagemaker create-endpoint \
