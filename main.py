@@ -35,17 +35,21 @@ class AgentRequest(BaseModel):
 # ---------- HEALTH CHECK ----------
 
 @app.get("/ping")
-async def ping():
-    return {"status": "alive"}
+def ping():
+    return {"status": "ok"}
 
 
 # ---------- SAGEMAKER ENDPOINT ----------
 
+# @app.post("/invocations")
+# async def invocations(request: Request):
+#     payload = await request.json()
+#     data = AgentRequest(**payload)
+#     return await agent_talk(data)
+
 @app.post("/invocations")
-async def invocations(request: Request):
-    payload = await request.json()
-    data = AgentRequest(**payload)
-    return await agent_talk(data)
+async def invoke(data: dict):
+    return {"result": "success"}
 
 
 # ---------- TEXT NORMALIZATION ----------
