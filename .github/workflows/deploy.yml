@@ -83,7 +83,7 @@ name: Deploy to AWS SageMaker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   deploy:
@@ -146,31 +146,31 @@ jobs:
             --endpoint-config-name $CONFIG_NAME \
             --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
 
-          echo "Creating new endpoint..."
+          echo "Creating endpoint..."
 
           aws sagemaker create-endpoint \
             --endpoint-name $ENDPOINT_NAME \
             --endpoint-config-name $CONFIG_NAME
 
-          echo "Waiting for endpoint to be ready..."
+          echo "Waiting for endpoint to be InService..."
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment Successful "
+          echo "Deployment Successful 🚀"
 
-          
-# Push → GitHub Action start
-#         ↓
-# Build Docker Image
-#         ↓
-# Push to ECR
-#         ↓
+
+# GitHub Action Start
+#       ↓
+# Docker Build
+#       ↓
+# Push Image → ECR
+#       ↓
 # Delete Old Endpoint
-#         ↓
+#       ↓
 # Create Model
-#         ↓
-# Create Config
-#         ↓
+#       ↓
+# Create Endpoint Config
+#       ↓
 # Create Endpoint
-#         ↓
+#       ↓
 # Wait → InService
