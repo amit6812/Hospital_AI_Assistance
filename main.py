@@ -34,7 +34,7 @@ class AgentRequest(BaseModel):
 
 # ---------- HEALTH CHECK ----------
 
-@app.get("/ping")
+@app.api_route("/ping", methods=["GET", "HEAD"])
 def ping():
     return {"status": "ok"}
 
@@ -48,8 +48,9 @@ def ping():
 #     return await agent_talk(data)
 
 @app.post("/invocations")
-async def invoke(data: dict):
-    return {"result": "success"}
+async def invocations(request: Request):
+    payload = await request.json()
+    return {"result": "success", "input": payload}
 
 
 # ---------- TEXT NORMALIZATION ----------
