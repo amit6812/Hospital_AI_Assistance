@@ -248,6 +248,12 @@ def make_call():
 
 if __name__ == "__main__":
     import uvicorn
-    # SageMaker requires port 8080
+    import sys
+
+    # Log arguments to help debug
+    print(f"Starting with arguments: {sys.argv}")
+    
+    # SageMaker passes 'serve' as an argument. 
+    # We ignore it and just start the app on 8080.
     port = int(os.environ.get("PORT", 8080))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
