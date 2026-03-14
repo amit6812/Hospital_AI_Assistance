@@ -1,100 +1,89 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.future import select
-import random
-import uuid
 from contextlib import asynccontextmanager
+import uuid
+import os
+import re
+
 from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
-from controller import handle_message,greeting_message
+from controller import handle_message, greeting_message
 from speaker import make_voice_friendly
-from db import init_db
-from twilio.rest import Client
-import os
-from dotenv import load_dotenv
-import re
-from fastapi import Request
-from fastapi.responses import Response
+
 from twilio.twiml.voice_response import VoiceResponse, Gather
+from twilio.rest import Client
 
-
-# Load ENV variable from .env file
-
-load_dotenv()
-
-# ---------- APP LIFESPAN -----
+# ---------- APP STARTUP ----------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: create tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Shutdown logic if needed
 
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
-
 # ---------- REQUEST MODEL ----------
+
 class AgentRequest(BaseModel):
     message: str
     session_id: str | None = None
 
 
+# ---------- HEALTH CHECK ----------
+
+@app.get("/ping")
+async def ping():
+    return {"status": "alive"}
+
+
+# ---------- SAGEMAKER ENDPOINT ----------
+
+@app.post("/invocations")
+async def invocations(request: Request):
+    payload = await request.json()
+    data = AgentRequest(**payload)
+    return await agent_talk(data)
+
+
+# ---------- TEXT NORMALIZATION ----------
 
 def normalize_speech_text(text: str) -> str:
     if not text:
         return text
 
     text = text.lower()
-
-    # Fix common STT formatting issues
     text = text.replace("p.m.", "PM")
     text = text.replace("a.m.", "AM")
-
-    # Fix weird spaced numbers like "23 0226"
-    #text = re.sub(r"(\d{1,2})\s+0?(\d{2})(\d{2})", r"\1/\2/\3", text)
-    text = re.sub(r"\s+", " ", text)  # Collapse multiple spaces
+    text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
-@app.post("/invocations")
-async def invocations(request: Request):
-    """SageMaker calls this for predictions"""
-    payload = await request.json()
-    data = AgentRequest(**payload)
-    return await agent_talk(data)
-
-# Ensure ping returns a simple 200 OK
-@app.get("/ping")
-async def ping():
-    return Response(content="alive", status_code=200)
-
-# ---------- MAIN CHAT ENDPOINT ----
+# ---------- CHAT ENDPOINT ----------
 
 @app.post("/agent/talk")
 async def agent_talk(data: AgentRequest):
 
     async with AsyncSessionLocal() as db:
 
-        # Generate session if not provided
-        current_session_id = data.session_id or str(uuid.uuid4())
+        session_id = data.session_id or str(uuid.uuid4())
 
-        # Check if session exists
         result = await db.execute(
-            select(ChatSession).where(ChatSession.session_id == current_session_id)
+            select(ChatSession).where(ChatSession.session_id == session_id)
         )
         session = result.scalar_one_or_none()
 
-        # ---------- NEW USER ----------
         if not session:
             session = ChatSession(
-                session_id=current_session_id,
+                session_id=session_id,
                 patient_name="Guest",
                 stage="ASK_SYMPTOM",
                 history=""
             )
+
             db.add(session)
             await db.commit()
             await db.refresh(session)
@@ -103,22 +92,19 @@ async def agent_talk(data: AgentRequest):
 
             return {
                 "reply": make_voice_friendly(reply),
-                "session_id": current_session_id
+                "session_id": session_id
             }
 
-        # ---------- EMPTY MESSAGE PROTECTION ----------
         if not data.message or not data.message.strip():
             return {
                 "reply": "Please tell me your health concern.",
-                "session_id": current_session_id
+                "session_id": session_id
             }
 
-        # ---------- EXISTING USER FLOW ----------
         reply = await handle_message(session, db, data.message)
 
         final_reply = make_voice_friendly(reply)
 
-        # ---------- SAVE CHAT HISTORY. ----------
         session.history = (session.history or "") + \
             f"\nPatient: {data.message}\nAI: {reply}"
 
@@ -126,10 +112,11 @@ async def agent_talk(data: AgentRequest):
 
         return {
             "reply": final_reply,
-            "session_id": current_session_id
+            "session_id": session_id
         }
 
 
+# ---------- TWILIO VOICE HANDLER ----------
 
 @app.post("/voice")
 async def voice_handler(request: Request):
@@ -142,21 +129,20 @@ async def voice_handler(request: Request):
 
     async with AsyncSessionLocal() as db:
 
-        current_session_id = call_sid
-
         result = await db.execute(
-            select(ChatSession).where(ChatSession.session_id == current_session_id)
+            select(ChatSession).where(ChatSession.session_id == call_sid)
         )
+
         session = result.scalar_one_or_none()
 
-        # ---------- FIRST TIME CALLER ----------
         if not session:
             session = ChatSession(
-                session_id=current_session_id,
+                session_id=call_sid,
                 patient_name="Guest",
                 stage="ASK_SYMPTOM",
                 history=""
             )
+
             db.add(session)
             await db.commit()
             await db.refresh(session)
@@ -165,8 +151,8 @@ async def voice_handler(request: Request):
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",              # Indian English
-                speechModel="phone_call",      # Better phone accuracy
+                language="en-IN",
+                speechModel="phone_call",
                 action="/voice",
                 method="POST"
             )
@@ -176,16 +162,15 @@ async def voice_handler(request: Request):
 
             return Response(str(response), media_type="application/xml")
 
-        # ---------- USER SPOKE ----------
         if speech_text:
 
-            print("SpeechResult:", speech_text)  # Debug
             clean_text = normalize_speech_text(speech_text)
+
             reply = await handle_message(session, db, clean_text)
+
             final_reply = make_voice_friendly(reply)
 
-            session.history = (session.history or "") + \
-                f"\nPatient: {speech_text}\nAI: {reply}"
+            session.history += f"\nPatient: {speech_text}\nAI: {reply}"
 
             await db.commit()
 
@@ -193,21 +178,23 @@ async def voice_handler(request: Request):
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",          # For Indian English
-                speechModel="phone_call",  # For Better recognition
+                language="en-IN",
+                speechModel="phone_call",
                 action="/voice",
                 method="POST"
             )
 
             gather.say(final_reply, voice="Polly.Aditi")
+
             response.append(gather)
 
         else:
+
             gather = Gather(
                 input="speech",
                 timeout=5,
                 speechTimeout="auto",
-                language="en-IN",          #Indian English
+                language="en-IN",
                 speechModel="phone_call",
                 action="/voice",
                 method="POST"
@@ -217,14 +204,13 @@ async def voice_handler(request: Request):
                 "I did not hear anything. Please say that again.",
                 voice="Polly.Aditi"
             )
+
             response.append(gather)
 
     return Response(str(response), media_type="application/xml")
 
-from twilio.rest import Client
 
-
-# Load ENV variable from .env file
+# ---------- TWILIO CALL ----------
 
 ACCOUNT_SID = os.getenv("ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
@@ -232,8 +218,10 @@ TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 MY_NUMBER = os.getenv("MY_NUMBER")
 BASE_URL = os.getenv("BASE_URL")
 
+
 @app.get("/make-call")
 def make_call():
+
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
     call = client.calls.create(
@@ -244,16 +232,17 @@ def make_call():
 
     return {"status": "Call initiated", "call_sid": call.sid}
 
-# ---------- DEPLOYMENT SETTINGS ----------
+
+# ---------- SERVER ----------
 
 if __name__ == "__main__":
-    import uvicorn
-    import sys
 
-    # Log arguments to help debug
-    print(f"Starting with arguments: {sys.argv}")
-    
-    # SageMaker passes 'serve' as an argument. 
-    # We ignore it and just start the app on 8080.
+    import uvicorn
+
     port = int(os.environ.get("PORT", 8080))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=port
+    )

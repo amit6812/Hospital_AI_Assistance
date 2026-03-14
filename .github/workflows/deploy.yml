@@ -1,4 +1,85 @@
-name: Deploy to AWS ECR and Update SageMaker
+# name: Deploy to AWS ECR and Update SageMaker
+
+# on:
+#   push:
+#     branches: [ "main" ]
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v3
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: eu-north-1
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v1
+
+#       - name: Build, Tag, and Push Image to ECR
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           ECR_REPOSITORY: new-repo-movie
+#           IMAGE_TAG: latest
+#         run: |
+#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+#       - name: Smart SageMaker Deploy
+#         run: |
+#           TIME_STAMP=$(date +%Y%m%d%H%M%S)
+#           MODEL_NAME="hospital-AI-model-$TIME_STAMP"
+#           CONFIG_NAME="hospital-config-$TIME_STAMP"
+#           ENDPOINT_NAME="hospital-agent-endpoint"
+#           ROLE_ARN="arn:aws:iam::509157248732:role/Movies_IAM_Role"
+
+#           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
+
+#           # Create Model
+#           aws sagemaker create-model \
+#             --model-name $MODEL_NAME \
+#             --primary-container "Image=$IMAGE_URI,Environment={PORT=8080}" \
+#             --execution-role-arn $ROLE_ARN
+
+#           # Create Endpoint Config
+#           aws sagemaker create-endpoint-config \
+#             --endpoint-config-name $CONFIG_NAME \
+#             --production-variants "VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large"
+
+#           STATUS=$(aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME --query 'EndpointStatus' --output text 2>/dev/null || echo "NotFound")
+
+#           echo "Current status of $ENDPOINT_NAME is $STATUS"
+
+#           if [ "$STATUS" == "InService" ]; then
+#             aws sagemaker update-endpoint \
+#               --endpoint-name $ENDPOINT_NAME \
+#               --endpoint-config-name $CONFIG_NAME
+
+#             aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
+
+#           elif [ "$STATUS" == "Failed" ]; then
+#             aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
+#             aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
+#             aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
+#             aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
+
+#           elif [ "$STATUS" == "NotFound" ]; then
+#             aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
+#             aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
+
+#           else
+#             echo "Endpoint is in $STATUS state. Wait before deploying again."
+#             exit 1
+#           fi
+
+name: Deploy to AWS SageMaker
 
 on:
   push:
@@ -7,69 +88,83 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Login to Amazon ECR
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, Tag, and Push Image to ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: new-repo-movie
-          IMAGE_TAG: latest
+      - name: Build and Push Image
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/hospital-agent:latest
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
 
-      - name: Smart SageMaker Deploy
+      - name: Deploy Fresh Endpoint
         run: |
-          TIME_STAMP=$(date +%Y%m%d%H%M%S)
-          MODEL_NAME="hospital-AI-model-$TIME_STAMP"
-          CONFIG_NAME="hospital-config-$TIME_STAMP"
-          ENDPOINT_NAME="hospital-agent-endpoint"
-          ROLE_ARN="arn:aws:iam::509157248732:role/Movies_IAM_Role"
 
-          # 1. Create Model
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/hospital-agent:latest
+
+          TIME=$(date +%s)
+
+          MODEL_NAME="hospital-model-$TIME"
+          CONFIG_NAME="hospital-config-$TIME"
+          ENDPOINT_NAME="hospital-endpoint"
+
+          echo "Checking if endpoint exists..."
+
+          if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
+              echo "Deleting old endpoint..."
+              aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
+              aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
+          fi
+
+          echo "Creating model..."
+
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
-            --primary-container Image=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest \
-            --execution-role-arn $ROLE_ARN
+            --primary-container Image=$IMAGE_URI \
+            --execution-role-arn ${{ secrets.SAGEMAKER_ROLE }}
 
-          # 2. Create Config (Using m5.large as it is widely supported)
+          echo "Creating endpoint config..."
+
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
-            --production-variants "VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large"
+            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
 
-          # 3. Handle Endpoint Status Logic
-          STATUS=$(aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME --query 'EndpointStatus' --output text 2>/dev/null || echo "NotFound")
-          echo "Current status of $ENDPOINT_NAME is $STATUS"
+          echo "Creating new endpoint..."
 
-          if [ "$STATUS" == "InService" ]; then
-            echo "Endpoint is healthy. Updating with new config..."
-            aws sagemaker update-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
-          
-          elif [ "$STATUS" == "Failed" ]; then
-            echo "Endpoint is in FAILED state. Deleting and recreating..."
-            aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
-            aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
-            aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
-          
-          elif [ "$STATUS" == "NotFound" ]; then
-            echo "Endpoint does not exist. Creating new endpoint..."
-            aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
-          
-          else
-            echo "Endpoint is in $STATUS state (e.g., Updating or Creating). Please wait for it to finish before pushing again."
-            exit 1
-          fi
+          aws sagemaker create-endpoint \
+            --endpoint-name $ENDPOINT_NAME \
+            --endpoint-config-name $CONFIG_NAME
+
+          echo "Waiting for endpoint to be InService..."
+
+          aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
+
+          echo "Deployment successful 🚀"
+
+# Push → GitHub Action start
+#         ↓
+# Build Docker Image
+#         ↓
+# Push to ECR
+#         ↓
+# Delete Old Endpoint
+#         ↓
+# Create Model
+#         ↓
+# Create Config
+#         ↓
+# Create Endpoint
+#         ↓
+# Wait → InService
