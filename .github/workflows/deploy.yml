@@ -90,12 +90,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v3
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -107,13 +106,12 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
 
-          echo "Building Docker Image..."
+          echo "Building Docker image..."
           docker build -t $IMAGE_URI .
 
-          echo "Pushing Image to ECR..."
+          echo "Pushing image to ECR..."
           docker push $IMAGE_URI
 
       - name: Deploy SageMaker Endpoint
@@ -139,7 +137,7 @@ jobs:
 
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
-            --primary-container Image=$IMAGE_URI,Environment="{ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}" \
+            --primary-container "Image=$IMAGE_URI,Environment={ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}}" \
             --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}"
 
           echo "Creating Endpoint Config..."
@@ -158,7 +156,7 @@ jobs:
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment Successful"
+          echo "Deployment Successful 🚀"
 
 
 # GitHub Action Start
