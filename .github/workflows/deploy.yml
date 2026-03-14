@@ -46,26 +46,30 @@ jobs:
             --primary-container Image=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest \
             --execution-role-arn $ROLE_ARN
 
-          # 2. Create Config
+          # 2. Create Config (Using m5.large as it is widely supported)
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
             --production-variants "VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large"
 
-          # 3. Handle Endpoint Status
+          # 3. Handle Endpoint Status Logic
           STATUS=$(aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME --query 'EndpointStatus' --output text 2>/dev/null || echo "NotFound")
           echo "Current status of $ENDPOINT_NAME is $STATUS"
 
           if [ "$STATUS" == "InService" ]; then
-            echo "Updating existing endpoint..."
+            echo "Endpoint is healthy. Updating with new config..."
             aws sagemaker update-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
+          
           elif [ "$STATUS" == "Failed" ]; then
-            echo "Endpoint is in Failed state. Deleting and recreating..."
+            echo "Endpoint is in FAILED state. Deleting and recreating..."
             aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
             aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
             aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
+          
           elif [ "$STATUS" == "NotFound" ]; then
-            echo "Creating new endpoint..."
+            echo "Endpoint does not exist. Creating new endpoint..."
             aws sagemaker create-endpoint --endpoint-name $ENDPOINT_NAME --endpoint-config-name $CONFIG_NAME
+          
           else
-            echo "Endpoint is in $STATUS state. Please wait for it to finish."
+            echo "Endpoint is in $STATUS state (e.g., Updating or Creating). Please wait for it to finish before pushing again."
+            exit 1
           fi
