@@ -90,29 +90,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Configure AWS
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Login to ECR
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and Push Image
+      - name: Build and Push Docker Image
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/hospital-agent:latest
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
+          echo "Building Docker image..."
           docker build -t $IMAGE_URI .
+          
+          echo "Pushing image to ECR..."
           docker push $IMAGE_URI
 
-      - name: Deploy Fresh Endpoint
+      - name: Deploy SageMaker Endpoint
         run: |
 
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/hospital-agent:latest
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
 
           TIME=$(date +%s)
 
@@ -147,11 +151,11 @@ jobs:
             --endpoint-name $ENDPOINT_NAME \
             --endpoint-config-name $CONFIG_NAME
 
-          echo "Waiting for endpoint to be InService..."
+          echo "Waiting for endpoint to be ready..."
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment successful 🚀"
+          echo "Deployment Successful"
 
 # Push → GitHub Action start
 #         ↓
