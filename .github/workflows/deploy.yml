@@ -90,6 +90,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -106,13 +107,15 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
+
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
 
-          echo "Building Docker image..."
+          echo "Building Docker image"
           docker build -t $IMAGE_URI .
 
-          echo "Pushing image to ECR..."
+          echo "Pushing Docker image"
           docker push $IMAGE_URI
+
 
       - name: Deploy SageMaker Endpoint
         run: |
@@ -125,38 +128,43 @@ jobs:
           CONFIG_NAME="hospital-config-$TIME"
           ENDPOINT_NAME="hospital-endpoint"
 
-          echo "Checking if endpoint exists..."
+          echo "Checking if endpoint exists"
 
           if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
-              echo "Deleting old endpoint..."
+              echo "Deleting old endpoint"
               aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
               aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
           fi
 
-          echo "Creating SageMaker Model..."
+
+          echo "Creating SageMaker Model"
 
           aws sagemaker create-model \
-            --model-name $MODEL_NAME \
-            --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
-            --primary-container "Image=$IMAGE_URI,Environment={GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
+          --model-name $MODEL_NAME \
+          --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
+          --primary-container Image=$IMAGE_URI,Environment="{GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
 
-          echo "Creating Endpoint Config..."
+
+          echo "Creating Endpoint Config"
 
           aws sagemaker create-endpoint-config \
-            --endpoint-config-name $CONFIG_NAME \
-            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
+          --endpoint-config-name $CONFIG_NAME \
+          --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
 
-          echo "Creating Endpoint..."
+
+          echo "Creating Endpoint"
 
           aws sagemaker create-endpoint \
-            --endpoint-name $ENDPOINT_NAME \
-            --endpoint-config-name $CONFIG_NAME
+          --endpoint-name $ENDPOINT_NAME \
+          --endpoint-config-name $CONFIG_NAME
 
-          echo "Waiting for endpoint to be InService..."
+
+          echo "Waiting for endpoint"
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment Successful"
+
+          echo "Deployment Successful 🚀"
 
 
 # Git Push
