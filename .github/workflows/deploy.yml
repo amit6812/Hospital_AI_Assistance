@@ -43,21 +43,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Login to Amazon ECR
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and Push Docker Image
+      - name: Build & Push Image
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
           docker build -t $IMAGE_URI .
@@ -87,27 +87,30 @@ jobs:
             --endpoint-config-name $CONFIG_NAME \
             --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
 
+          echo "Waiting for config to register..."
+          sleep 20
+
           echo "Checking if endpoint exists"
 
           if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
 
-              echo "Updating endpoint..."
+            echo "Updating endpoint..."
 
-              aws sagemaker update-endpoint \
-                --endpoint-name $ENDPOINT_NAME \
-                --endpoint-config-name $CONFIG_NAME
+            aws sagemaker update-endpoint \
+              --endpoint-name $ENDPOINT_NAME \
+              --endpoint-config-name $CONFIG_NAME
 
           else
 
-              echo "Creating endpoint..."
+            echo "Creating endpoint..."
 
-              aws sagemaker create-endpoint \
-                --endpoint-name $ENDPOINT_NAME \
-                --endpoint-config-name $CONFIG_NAME
+            aws sagemaker create-endpoint \
+              --endpoint-name $ENDPOINT_NAME \
+              --endpoint-config-name $CONFIG_NAME
 
           fi
 
-          echo "Waiting for endpoint"
+          echo "Waiting for endpoint to be InService..."
 
           aws sagemaker wait endpoint-in-service \
             --endpoint-name $ENDPOINT_NAME
