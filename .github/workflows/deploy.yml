@@ -159,6 +159,8 @@ jobs:
           echo "Deployment Successful 🚀"
 
 
+# Push to main
+#       ↓
 # GitHub Action Start
 #       ↓
 # Docker Build
@@ -167,10 +169,10 @@ jobs:
 #       ↓
 # Delete Old Endpoint
 #       ↓
-# Create Model
+# Create New Model
 #       ↓
 # Create Endpoint Config
 #       ↓
 # Create Endpoint
 #       ↓
-# Wait → InService
+# Wait until InService
