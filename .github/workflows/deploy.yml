@@ -156,7 +156,7 @@ jobs:
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment Successful 🚀"
+          echo "Deployment Successful "
 
 
 # Push to main
@@ -175,4 +175,4 @@ jobs:
 #       ↓
 # Create Endpoint
 #       ↓
-# Wait until InService
+# Wait until InServices
