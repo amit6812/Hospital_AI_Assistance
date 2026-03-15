@@ -137,8 +137,8 @@ jobs:
 
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
-            --primary-container "Image=$IMAGE_URI,Environment={ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}}" \
-            --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}"
+            --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
+            --primary-container "Image=$IMAGE_URI,Environment={GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
 
           echo "Creating Endpoint Config..."
 
@@ -156,23 +156,23 @@ jobs:
 
           aws sagemaker wait endpoint-in-service --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment Successful "
+          echo "Deployment Successful"
 
 
-# Push to main
-#       ↓
-# GitHub Action Start
-#       ↓
+# Git Push
+#    ↓
+# GitHub Action
+#    ↓
 # Docker Build
-#       ↓
-# Push Image → ECR
-#       ↓
-# Delete Old Endpoint
-#       ↓
-# Create New Model
-#       ↓
-# Create Endpoint Config
-#       ↓
+#    ↓
+# Push to ECR
+#    ↓
+# Create SageMaker Model
+#    ↓
+# Pass ENV Variables
+#    ↓
 # Create Endpoint
-#       ↓
-# Wait until InServices
+#    ↓
+# Health Check /ping
+#    ↓
+# Endpoint InService
