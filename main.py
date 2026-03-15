@@ -228,7 +228,7 @@ async def voice_handler(request: Request):
     return Response(str(response), media_type="application/xml")
 
 
-# ---------- TWILIO CALL ----------
+# ---------- TWILIO CALL 
 
 ACCOUNT_SID = os.getenv("ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
