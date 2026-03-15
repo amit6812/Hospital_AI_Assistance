@@ -39,13 +39,6 @@ def ping():
     return {"status": "ok"}
 
 
-# ---------- SAGEMAKER ENDPOINT ----------
-
-# @app.post("/invocations")
-# async def invocations(request: Request):
-#     payload = await request.json()
-#     data = AgentRequest(**payload)
-#     return await agent_talk(data)
 
 # SageMaker invocation endpoint
 @app.post("/invocations")
