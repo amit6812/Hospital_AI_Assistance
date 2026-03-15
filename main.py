@@ -34,7 +34,7 @@ class AgentRequest(BaseModel):
 
 # ---------- HEALTH CHECK ----------
 
-@app.api_route("/ping", methods=["GET", "HEAD"])
+@app.get("/ping")
 def ping():
     return {"status": "ok"}
 
@@ -47,11 +47,24 @@ def ping():
 #     data = AgentRequest(**payload)
 #     return await agent_talk(data)
 
+# SageMaker invocation endpoint
 @app.post("/invocations")
-async def invocations(request: Request):
-    payload = await request.json()
-    return {"result": "success", "input": payload}
+async def invoke(data: AgentRequest):
 
+    message = data.message.lower()
+
+    if "hello" in message:
+        reply = "Hello, how can I help you today?"
+
+    elif "doctor" in message:
+        reply = "Sure, I can help you book a doctor appointment."
+
+    else:
+        reply = "Please tell me your health concern."
+
+    return {
+        "reply": reply
+    }
 
 # ---------- TEXT NORMALIZATION ----------
 
