@@ -138,7 +138,7 @@ jobs:
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
             --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
-            --primary-container "Image=$IMAGE_URI,Environment={GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.TWILIO_ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.TWILIO_AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
+            --primary-container "Image=$IMAGE_URI,Environment={GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
 
           echo "Creating Endpoint Config..."
 
