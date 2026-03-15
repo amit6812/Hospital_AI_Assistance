@@ -43,24 +43,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Configure AWS
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Login to ECR
+      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and Push Image
+      - name: Build and Push Docker Image
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
+
+          echo "Building Docker image..."
           docker build -t $IMAGE_URI .
+
+          echo "Pushing image to ECR..."
           docker push $IMAGE_URI
 
       - name: Deploy to SageMaker
@@ -74,7 +78,15 @@ jobs:
           CONFIG_NAME="hospital-config-$TIME"
           ENDPOINT_NAME="hospital-endpoint"
 
-          echo "Creating model"
+          echo "Checking if endpoint exists..."
+
+          if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
+              echo "Deleting old endpoint..."
+              aws sagemaker delete-endpoint --endpoint-name $ENDPOINT_NAME
+              aws sagemaker wait endpoint-deleted --endpoint-name $ENDPOINT_NAME
+          fi
+
+          echo "Creating new model..."
 
           aws sagemaker create-model \
             --model-name $MODEL_NAME \
@@ -82,54 +94,35 @@ jobs:
             --primary-container '{
               "Image": "'"$IMAGE_URI"'",
               "Environment": {
-                "GROQ_API_KEY": "${{ secrets.GROQ_API_KEY }}",
-                "ACCOUNT_SID": "${{ secrets.ACCOUNT_SID }}",
-                "AUTH_TOKEN": "${{ secrets.AUTH_TOKEN }}",
-                "TWILIO_NUMBER": "${{ secrets.TWILIO_NUMBER }}",
-                "MY_NUMBER": "${{ secrets.MY_NUMBER }}",
-                "BASE_URL": "${{ secrets.BASE_URL }}"
+                "GROQ_API_KEY": "'"${{ secrets.GROQ_API_KEY }}"'",
+                "ACCOUNT_SID": "'"${{ secrets.ACCOUNT_SID }}"'",
+                "AUTH_TOKEN": "'"${{ secrets.AUTH_TOKEN }}"'",
+                "TWILIO_NUMBER": "'"${{ secrets.TWILIO_NUMBER }}"'",
+                "MY_NUMBER": "'"${{ secrets.MY_NUMBER }}"'",
+                "BASE_URL": "'"${{ secrets.BASE_URL }}"'"
               }
             }'
 
-          echo "Creating endpoint config"
+          echo "Creating endpoint config..."
 
           aws sagemaker create-endpoint-config \
             --endpoint-config-name $CONFIG_NAME \
-            --production-variants '[
-              {
+            --production-variants '[{
                 "VariantName":"AllTraffic",
                 "ModelName":"'"$MODEL_NAME"'",
                 "InstanceType":"ml.m5.large",
                 "InitialInstanceCount":1
-              }
-            ]'
+            }]'
 
-          echo "Waiting for config..."
-          sleep 25
+          echo "Creating new endpoint..."
 
-          echo "Checking endpoint"
+          aws sagemaker create-endpoint \
+            --endpoint-name $ENDPOINT_NAME \
+            --endpoint-config-name $CONFIG_NAME
 
-          if aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME > /dev/null 2>&1; then
-
-              echo "Updating endpoint"
-
-              aws sagemaker update-endpoint \
-                --endpoint-name $ENDPOINT_NAME \
-                --endpoint-config-name $CONFIG_NAME
-
-          else
-
-              echo "Creating endpoint"
-
-              aws sagemaker create-endpoint \
-                --endpoint-name $ENDPOINT_NAME \
-                --endpoint-config-name $CONFIG_NAME
-
-          fi
-
-          echo "Waiting for endpoint..."
+          echo "Waiting for endpoint to become InService..."
 
           aws sagemaker wait endpoint-in-service \
             --endpoint-name $ENDPOINT_NAME
 
-          echo "Deployment successful"
+          echo "Deployment Successful 🚀"
