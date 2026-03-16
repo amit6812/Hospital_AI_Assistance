@@ -6,7 +6,6 @@ from contextlib import asynccontextmanager
 import uuid
 import os
 import re
-
 from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
 from controller import handle_message, greeting_message
@@ -42,22 +41,8 @@ def ping():
 
 # SageMaker invocation endpoint
 @app.post("/invocations")
-async def invoke(data: AgentRequest):
-
-    message = data.message.lower()
-
-    if "hello" in message:
-        reply = "Hello, how can I help you today?"
-
-    elif "doctor" in message:
-        reply = "Sure, I can help you book a doctor appointment."
-
-    else:
-        reply = "Please tell me your health concern."
-
-    return {
-        "reply": reply
-    }
+def invoke():
+    return {"message": "model working"}
 
 # ---------- TEXT NORMALIZATION ----------
 
@@ -244,7 +229,7 @@ def make_call():
     return {"status": "Call initiated", "call_sid": call.sid}
 
 
-# ---------- SERVER ----------
+# ---------- SERVER -
 
 if __name__ == "__main__":
 
