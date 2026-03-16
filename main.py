@@ -10,7 +10,6 @@ from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
 from controller import handle_message, greeting_message
 from speaker import make_voice_friendly
-
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
 
@@ -231,13 +230,10 @@ def make_call():
 
 # ---------- SERVER -
 
-if __name__ == "__main__":
+import sys
 
+if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port
-    )
+    if len(sys.argv) > 1 and sys.argv[1] == "serve":
+        uvicorn.run("main:app", host="0.0.0.0", port=8080)
