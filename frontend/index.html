@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitalis AI - Hospital Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            /* Image no 2 jaisa exact cellular/biological background */
+            background: linear-gradient(rgba(11, 12, 21, 0.8), rgba(11, 12, 21, 0.8)), 
+                        url('https://img.freepik.com/free-photo/abstract-background-with-cells-molecules_23-2149115306.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-container {
+            /* Full layout ko thoda transparent glass look dene ke liye */
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.02);
+            height: 100%;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
+
+        .chat-box {
+            /* Image no 2 ka right side chat panel */
+            background: rgba(15, 15, 25, 0.7);
+            backdrop-filter: blur(30px);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-green {
+            background: #22c55e;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-green:hover {
+            background: #16a34a;
+            transform: scale(1.01);
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Smooth glow effect for the cards */
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="glass-container flex h-full">
+        
+        <div class="w-1/2 p-16 flex flex-col justify-center space-y-12">
+            <div class="flex items-center space-x-4">
+                <div class="bg-indigo-600 p-3 rounded-2xl shadow-lg">
+                    <i class="fas fa-hospital-alt text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight">Vitalis AI <span class="text-indigo-400 font-light text-xl ml-2">- Hospital Edition</span></h1>
+            </div>
+
+            <div class="space-y-6">
+                <h2 class="text-7xl font-bold leading-tight tracking-tight">
+                    Innovate your <br>
+                    <span class="text-indigo-400">Patient Outcomes</span><br>
+                    with Vitalis AI.
+                </h2>
+                <p class="text-gray-400 text-xl max-w-lg leading-relaxed">
+                    The all-in-one platform for multi-channel hospital automation, AI-powered diagnostics, and unified communication.
+                </p>
+            </div>
+
+            <div class="flex space-x-6">
+                <div class="glass-panel p-6 w-64 feature-card transition-all">
+                    <i class="fas fa-bolt text-yellow-400 text-xl mb-4"></i>
+                    <h4 class="font-bold text-lg mb-2 text-gray-100">Optimized Admin</h4>
+                    <p class="text-sm text-gray-400 leading-snug">Streamline scheduling, resource allocation, and workflow efficiency.</p>
+                </div>
+                <div class="glass-panel p-6 w-64 feature-card transition-all">
+                    <i class="far fa-star text-blue-400 text-xl mb-4"></i>
+                    <h4 class="font-bold text-lg mb-2 text-gray-100">Diagnostic Assistance</h4>
+                    <p class="text-sm text-gray-400 leading-snug">Utilize advanced AI models for earlier disease detection and insights.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center text-xs text-indigo-300 font-bold tracking-widest bg-indigo-500/10 w-fit px-4 py-2 rounded-full border border-indigo-500/20">
+                <i class="fas fa-shield-alt mr-2"></i> ENTERPRISE GRADE SECURITY
+            </div>
+        </div>
+
+        <div class="w-1/2 chat-box flex flex-col p-12">
+            <div class="flex justify-between items-center mb-10">
+                <h3 class="text-sm font-semibold text-gray-400 tracking-widest uppercase">Healthcare Intelligence Chat</h3>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
+                        <i class="fab fa-google text-red-400 text-sm"></i>
+                        <span class="text-xs font-bold">Google</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl">
+                        <i class="fas fa-mobile-alt text-blue-400 text-sm"></i>
+                        <span class="text-xs font-bold">Phone No</span>
+                    </div>
+                    <div class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center border border-white/20">
+                        <i class="fas fa-user text-sm"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="makeCall()" id="callBtn" class="btn-green w-full py-5 rounded-2xl font-black text-sm tracking-widest flex items-center justify-center space-x-3 mb-10">
+                <span>CALL WITH AGENT</span>
+                <i class="fas fa-phone-alt"></i>
+            </button>
+
+            <div id="chatWindow" class="flex-grow overflow-y-auto custom-scroll space-y-6 mb-8 pr-4">
+                <div class="flex flex-col items-start">
+                    <div class="bg-white/5 p-5 rounded-2xl rounded-tl-none border border-white/10 max-w-[90%]">
+                        <p class="text-indigo-400 font-bold text-[11px] uppercase tracking-tighter mb-2">Vitalis Assistant</p>
+                        <p class="text-gray-200 leading-relaxed">Welcome back! How can I assist you with patient data analysis or appointment booking today?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative">
+                <input type="text" id="userInput" 
+                       class="w-full bg-black/40 border border-white/10 rounded-2xl py-5 px-8 focus:outline-none focus:border-indigo-500/40 text-white placeholder-gray-600" 
+                       placeholder="Ask about symptoms or book a call..."
+                       onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button onclick="sendMessage()" class="absolute right-6 top-5 text-indigo-400 hover:text-white transition-colors">
+                    <i class="fas fa-paper-plane text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ... (Javascript logic same as previous, functions for makeCall and sendMessage) ...
+        let sessionId = localStorage.getItem('chat_session_id') || null;
+
+        async function makeCall() {
+            const btn = document.getElementById('callBtn');
+            btn.innerHTML = 'CONNECTING... <i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const response = await fetch('/make-call');
+                const data = await response.json();
+                btn.innerHTML = 'CONNECTED <i class="fas fa-check"></i>';
+                setTimeout(() => { btn.innerHTML = 'CALL WITH AGENT <i class="fas fa-phone-alt"></i>'; }, 3000);
+            } catch (error) {
+                btn.innerHTML = 'CALL WITH AGENT <i class="fas fa-phone-alt"></i>';
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.innerHTML += `<div class="flex flex-col items-end"><div class="bg-indigo-600 p-4 rounded-2xl rounded-tr-none max-w-[85%]"><p class="text-white">${message}</p></div></div>`;
+            input.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            try {
+                const response = await fetch('/agent/talk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, session_id: sessionId })
+                });
+                const data = await response.json();
+                chatWindow.innerHTML += `<div class="flex flex-col items-start"><div class="bg-white/5 p-4 rounded-2xl rounded-tl-none border border-white/10 max-w-[85%]"><p class="text-indigo-300 font-bold text-[10px]">Vitalis Assistant</p><p class="text-gray-200">${data.reply}</p></div></div>`;
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>

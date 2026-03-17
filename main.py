@@ -1,17 +1,22 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import Response
+from fastapi.responses import Response, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy.future import select
 from contextlib import asynccontextmanager
 import uuid
 import os
 import re
+import sys
+
 from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
 from controller import handle_message, greeting_message
 from speaker import make_voice_friendly
+
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
+
 
 # ---------- APP STARTUP ----------
 
@@ -21,7 +26,24 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     yield
 
+
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
+
+
+# ---------- UI STATIC FILES ----------
+
+if os.path.exists("frontend"):
+    app.mount("/static", StaticFiles(directory="frontend"), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def ui():
+    try:
+        with open("frontend/index.html") as f:
+            return f.read()
+    except:
+        return "<h2>UI not found</h2>"
+
 
 # ---------- REQUEST MODEL ----------
 
@@ -37,15 +59,17 @@ def ping():
     return {"status": "ok"}
 
 
+# ---------- SAGEMAKER INVOCATION ----------
 
-# SageMaker invocation endpoint
 @app.post("/invocations")
 def invoke():
     return {"message": "model working"}
 
+
 # ---------- TEXT NORMALIZATION ----------
 
-def normalize_speech_text(text: str) -> str:
+def normalize_speech_text(text: str):
+
     if not text:
         return text
 
@@ -69,9 +93,11 @@ async def agent_talk(data: AgentRequest):
         result = await db.execute(
             select(ChatSession).where(ChatSession.session_id == session_id)
         )
+
         session = result.scalar_one_or_none()
 
         if not session:
+
             session = ChatSession(
                 session_id=session_id,
                 patient_name="Guest",
@@ -131,6 +157,7 @@ async def voice_handler(request: Request):
         session = result.scalar_one_or_none()
 
         if not session:
+
             session = ChatSession(
                 session_id=call_sid,
                 patient_name="Guest",
@@ -153,6 +180,7 @@ async def voice_handler(request: Request):
             )
 
             gather.say(greeting_message(), voice="Polly.Aditi")
+
             response.append(gather)
 
             return Response(str(response), media_type="application/xml")
@@ -205,7 +233,7 @@ async def voice_handler(request: Request):
     return Response(str(response), media_type="application/xml")
 
 
-# ---------- TWILIO CALL 
+# ---------- TWILIO CALL ----------
 
 ACCOUNT_SID = os.getenv("ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
@@ -228,11 +256,10 @@ def make_call():
     return {"status": "Call initiated", "call_sid": call.sid}
 
 
-# ---------- SERVER -
-
-import sys
+# ---------- SERVER ----------
 
 if __name__ == "__main__":
+
     import uvicorn
 
     if len(sys.argv) > 1 and sys.argv[1] == "serve":
