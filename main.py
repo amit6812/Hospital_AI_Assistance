@@ -16,7 +16,7 @@ from speaker import make_voice_friendly
 
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
-
+from fastapi.middleware.cors import CORSMiddleware
 
 # ---------- APP STARTUP ----------
 
@@ -30,6 +30,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # ---------- UI STATIC FILES ----------
 
 if os.path.exists("frontend"):
@@ -85,21 +93,29 @@ def normalize_speech_text(text: str):
 
 @app.post("/agent/talk")
 async def agent_talk(data: AgentRequest):
-
     async with AsyncSessionLocal() as db:
+        
+        current_session_id = data.session_id
+        is_new_session = False
 
-        session_id = data.session_id or str(uuid.uuid4())
+        if not current_session_id or current_session_id == "null":
+            current_session_id = str(uuid.uuid4())
+            is_new_session = True
+        # else:
+        #     session_id = data.session_id
+
+        # session_id = data.session_id or str(uuid.uuid4())
 
         result = await db.execute(
-            select(ChatSession).where(ChatSession.session_id == session_id)
+            select(ChatSession).where(ChatSession.session_id == current_session_id)
         )
 
-        session = result.scalar_one_or_none()
+        session = result.scalar_one_or_none()   
 
         if not session:
 
             session = ChatSession(
-                session_id=session_id,
+                session_id=current_session_id,
                 patient_name="Guest",
                 stage="ASK_SYMPTOM",
                 history=""
@@ -108,19 +124,21 @@ async def agent_talk(data: AgentRequest):
             db.add(session)
             await db.commit()
             await db.refresh(session)
+            is_new_session = True   #------------------------
 
+        if is_new_session:
             reply = greeting_message()
 
             return {
                 "reply": make_voice_friendly(reply),
-                "session_id": session_id
+                "session_id": current_session_id
             }
 
-        if not data.message or not data.message.strip():
-            return {
-                "reply": "Please tell me your health concern.",
-                "session_id": session_id
-            }
+        # if not data.message or not data.message.strip():
+        #     return {
+        #         "reply": "Please tell me your health concern.",
+        #         "session_id": session_id
+        #     }
 
         reply = await handle_message(session, db, data.message)
 
@@ -133,7 +151,7 @@ async def agent_talk(data: AgentRequest):
 
         return {
             "reply": final_reply,
-            "session_id": session_id
+            "session_id": current_session_id
         }
 
 

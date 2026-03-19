@@ -303,7 +303,7 @@ async def handle_message(session, db, user_msg):
             return "Sure! Please tell me which specialist doctor you want to consult."
 
         if msg in ["hi", "hello", "hey"]:
-            return "Please describe your symptoms."
+            return "Sorry, I didn't catch that !! Please tell me what may i assist you with."
 
         ai_reply = medical_chat(user_msg, session.history or "")
 

@@ -29,7 +29,7 @@
         "thyroid": "Endocrinologist",
         "diabetes": "Endocrinologist",
         "kidney": "Nephrologist",
-        "old age weakness": "Geriatrician", 
+        "old age weakness": "Geriatrician",
         "dementia": "Geriatrician"
     },
     "doctors": [
@@ -42,34 +42,41 @@
             "fee": 500,
             "weekly_schedule": [
                 {
-                    "date": "26/02/26",
+                    "date": "20/03/26",
                     "status": "Available",
-                    "slots": ["10:00 AM", "11:00 AM", "01:00 PM"]
+                    "slots": [
+                        "10:00 AM",
+                        "11:00 AM",
+                        "01:00 PM"
+                    ]
                 },
                 {
-                    "date": "27/02/26",
+                    "date": "21/03/26",
                     "status": "Available",
-                    "slots": ["10:30 AM", "12:30 PM"]
+                    "slots": [
+                        "10:30 AM",
+                        "12:30 PM"
+                    ]
                 },
                 {
-                    "date": "28/02/26",
-                    "status": "Not Available",
-                    "slots": []
-                },
-                {
-                    "date": "01/03/26",
+                    "date": "22/03/26",
                     "status": "Closed",
                     "slots": []
                 },
                 {
-                    "date": "02/03/26",
+                    "date": "23/03/26",
                     "status": "Available",
-                    "slots": ["10:00 AM", "12:00 PM"]
+                    "slots": [
+                        "10:00 AM",
+                        "12:00 PM"
+                    ]
                 },
                 {
-                    "date": "03/03/26",
+                    "date": "24/03/26",
                     "status": "Half Day",
-                    "slots": ["10:00 AM"]
+                    "slots": [
+                        "10:00 AM"
+                    ]
                 }
             ]
         },
@@ -82,17 +89,27 @@
             "fee": 1200,
             "weekly_schedule": [
                 {
-                    "date": "26/02/26",
+                    "date": "20/03/26",
                     "status": "Available",
-                    "slots": ["04:00 PM", "05:30 PM", "07:00 PM"]
+                    "slots": [
+                        "04:00 PM",
+                        "05:30 PM",
+                        "07:00 PM"
+                    ]
                 },
                 {
-                    "date": "27/02/26",
+                    "date": "21/03/26",
                     "status": "Available",
-                    "slots": ["04:00 PM", "06:00 PM"]
+                    "slots": [
+                        "04:00 PM",
+                        "06:00 PM"
+                    ],
+                    "booked_slots": [
+                        "21/03/26_06:00PM"
+                    ]
                 },
                 {
-                    "date": "01/03/26",
+                    "date": "22/03/26",
                     "status": "Closed",
                     "slots": []
                 }
@@ -107,14 +124,20 @@
             "fee": 700,
             "weekly_schedule": [
                 {
-                    "date": "26/02/26",
+                    "date": "20/03/26",
                     "status": "Available",
-                    "slots": ["11:00 AM", "01:00 PM", "09:00 PM"]
+                    "slots": [
+                        "11:00 AM",
+                        "01:00 PM",
+                        "09:00 PM"
+                    ]
                 },
                 {
-                    "date": "01/03/26",
+                    "date": "22/03/26",
                     "status": "Emergency Only",
-                    "slots": ["12:00 PM"]
+                    "slots": [
+                        "12:00 PM"
+                    ]
                 }
             ]
         },
@@ -125,21 +148,31 @@
             "specialty": "Pediatrician",
             "experience": "10 Years",
             "fee": 600,
-            "weekly_schedule": [    
+            "weekly_schedule": [
                 {
-                    "date": "26/02/26",
+                    "date": "20/03/26",
                     "status": "Available",
-                    "slots": ["10:00 AM", "12:00 PM", "05:00 PM"]
+                    "slots": [
+                        "10:00 AM",
+                        "12:00 PM",
+                        "05:00 PM"
+                    ]
                 },
                 {
-                    "date": "27/02/26",
+                    "date": "21/03/26",
                     "status": "Available",
-                    "slots": ["11:00 AM", "01:00 PM"]
+                    "slots": [
+                        "11:00 AM",
+                        "01:00 PM"
+                    ]
                 },
                 {
-                    "date": "28/02/26",
+                    "date": "22/03/26",
                     "status": "Available",
-                    "slots": ["10:00 AM", "12:00 PM"]
+                    "slots": [
+                        "10:00 AM",
+                        "12:00 PM"
+                    ]
                 }
             ]
         },
@@ -152,14 +185,20 @@
             "fee": 550,
             "weekly_schedule": [
                 {
-                    "date": "26/02/26",
+                    "date": "20/03/26",
                     "status": "Available",
-                    "slots": ["11:00 AM", "01:00 PM"]
+                    "slots": [
+                        "11:00 AM",
+                        "01:00 PM"
+                    ]
                 },
                 {
-                    "date": "27/02/26",
+                    "date": "21/03/26",
                     "status": "Available",
-                    "slots": ["04:00 PM", "06:00 PM"]
+                    "slots": [
+                        "04:00 PM",
+                        "06:00 PM"
+                    ]
                 }
             ]
         }

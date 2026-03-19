@@ -1,14 +1,15 @@
-# name: Deploy to AWS ECR and Update SageMaker
+# name: Deploy Hospital AI to SageMaker
 
 # on:
 #   push:
-#     branches: [ "main" ]
+#     branches: ["main"]
 
 # jobs:
 #   deploy:
 #     runs-on: ubuntu-latest
 
 #     steps:
+
 #       - name: Checkout Code
 #         uses: actions/checkout@v3
 
@@ -23,88 +24,94 @@
 #         id: login-ecr
 #         uses: aws-actions/amazon-ecr-login@v1
 
-#       - name: Build, Tag, and Push Image to ECR
-#         env:
-#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#           ECR_REPOSITORY: new-repo-movie
-#           IMAGE_TAG: latest
+#       - name: Build and Push Docker Image
 #         run: |
-#           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
 
-name: Deploy Hospital AI to SageMaker
+#           docker build -t $IMAGE_URI .
+#           docker push $IMAGE_URI
+
+#       - name: Deploy to SageMaker
+#         run: |
+
+#           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
+
+#           TIME=$(date +%s)
+
+#           MODEL_NAME="hospital-model-$TIME"
+#           CONFIG_NAME="hospital-config-$TIME"
+#           ENDPOINT_NAME="hospital-endpoint"
+
+#           echo "Deleting old endpoint if exists..."
+
+#           aws sagemaker delete-endpoint \
+#             --endpoint-name $ENDPOINT_NAME || true
+
+#           sleep 40
+
+#           echo "Creating model..."
+
+#           aws sagemaker create-model \
+#             --model-name $MODEL_NAME \
+#             --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
+#             --primary-container Image=$IMAGE_URI,Environment="{GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
+
+#           echo "Creating endpoint config..."
+
+#           aws sagemaker create-endpoint-config \
+#             --endpoint-config-name $CONFIG_NAME \
+#             --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
+
+#           echo "Creating endpoint..."
+
+#           aws sagemaker create-endpoint \
+#             --endpoint-name $ENDPOINT_NAME \
+#             --endpoint-config-name $CONFIG_NAME
+
+#           echo "Waiting for endpoint..."
+
+#           aws sagemaker wait endpoint-in-service \
+#             --endpoint-name $ENDPOINT_NAME
+
+#           echo "Deployment Successful"
+
+
+name: Deploy Vitalis AI
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      # 1. FRONTEND DEPLOY TO S3
+      - name: Deploy Frontend to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws s3 cp index.html s3://hospital-handler-bucket/ --region eu-north-1
+
+      # 2. BACKEND DEPLOY TO EC2 (Via SSH)
+      - name: Deploy Backend to EC2
+        uses: appleboy/ssh-action@master
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build and Push Docker Image
-        run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
-
-          docker build -t $IMAGE_URI .
-          docker push $IMAGE_URI
-
-      - name: Deploy to SageMaker
-        run: |
-
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/new-repo-movie:latest
-
-          TIME=$(date +%s)
-
-          MODEL_NAME="hospital-model-$TIME"
-          CONFIG_NAME="hospital-config-$TIME"
-          ENDPOINT_NAME="hospital-endpoint"
-
-          echo "Deleting old endpoint if exists..."
-
-          aws sagemaker delete-endpoint \
-            --endpoint-name $ENDPOINT_NAME || true
-
-          sleep 40
-
-          echo "Creating model..."
-
-          aws sagemaker create-model \
-            --model-name $MODEL_NAME \
-            --execution-role-arn "${{ secrets.SAGEMAKER_ROLE }}" \
-            --primary-container Image=$IMAGE_URI,Environment="{GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},ACCOUNT_SID=${{ secrets.ACCOUNT_SID }},AUTH_TOKEN=${{ secrets.AUTH_TOKEN }},TWILIO_NUMBER=${{ secrets.TWILIO_NUMBER }},MY_NUMBER=${{ secrets.MY_NUMBER }},BASE_URL=${{ secrets.BASE_URL }}}"
-
-          echo "Creating endpoint config..."
-
-          aws sagemaker create-endpoint-config \
-            --endpoint-config-name $CONFIG_NAME \
-            --production-variants VariantName=AllTraffic,ModelName=$MODEL_NAME,InitialInstanceCount=1,InstanceType=ml.m5.large
-
-          echo "Creating endpoint..."
-
-          aws sagemaker create-endpoint \
-            --endpoint-name $ENDPOINT_NAME \
-            --endpoint-config-name $CONFIG_NAME
-
-          echo "Waiting for endpoint..."
-
-          aws sagemaker wait endpoint-in-service \
-            --endpoint-name $ENDPOINT_NAME
-
-          echo "Deployment Successful"
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/your-repo-folder  # <--- Yahan folder name change karein
+            git pull origin main
+            source venv/bin/activate || true   # Agar virtual env use kar rahe hain
+            pip install -r requirements.txt
+            
+            # Gunicorn restart logic
+            pkill gunicorn || true
+            sleep 2
+            # Gunicorn ko absolute path se chalana better hota hai
+            /home/ubuntu/.local/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --daemon --bind 0.0.0.0:8000
