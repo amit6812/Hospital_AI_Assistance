@@ -74,7 +74,7 @@
 #             --endpoint-name $ENDPOINT_NAME
 
 #           echo "Deployment Successful"
-
+#________________________________________________________________________________________________
 
 name: Deploy Vitalis AI
 
@@ -89,7 +89,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 1. FRONTEND DEPLOY TO S3
+      # 1. FRONTEND DEPLOY TO S3...
       - name: Deploy Frontend to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -8,12 +8,10 @@ import uuid
 import os
 import re
 import sys
-
 from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
 from controller import handle_message, greeting_message
 from speaker import make_voice_friendly
-
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
 from fastapi.middleware.cors import CORSMiddleware
