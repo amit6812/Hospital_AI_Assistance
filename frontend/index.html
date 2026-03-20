@@ -226,9 +226,13 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch('/make-call');
+                const response = await fetch('http://51.21.161.134:8000/make-call');
                 const data = await response.json();
-                alert("Call Initiated! SID: " + data.call_sid);
+                if(data.status === "Call initiated") {
+                    alert("Call Initiated! SID: " + data.call_sid);
+                } else {
+                    alert("Failed to initiate call.");
+                }
             } catch (error) {
                 alert("Failed to initiate call.");
             } finally {
