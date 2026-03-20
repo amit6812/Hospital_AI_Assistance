@@ -96,7 +96,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           # Agar index.html folder ke andar hai to path change karein (e.g. src/index.html)
-          aws s3 cp index.html s3://hospital-handler-bucket/ --region eu-north-1
+          aws s3 cp frontend/index.html s3://hospital-handler-bucket/ --region eu-north-1
 
       # 2. BACKEND DEPLOY TO EC2
       - name: Deploy Backend to EC2
