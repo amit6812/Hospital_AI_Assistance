@@ -95,7 +95,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          # Agar index.html folder ke andar hai to path change karein (e.g. src/index.html)
+        
           aws s3 cp frontend/index.html s3://hospital-handler-bucket/ --region eu-north-1
 
       # 2. BACKEND DEPLOY TO EC2
@@ -117,7 +117,7 @@ jobs:
             git pull origin main
             
             # Environment setup
-            pip3 install -r requirements.txt
+            pip install -r requirements.txt
             
             # Gunicorn restart logic (Safe restart)
             pkill -f gunicorn || true
