@@ -14,9 +14,10 @@
                 radial-gradient(circle at 80% 70%, rgba(68, 20, 100, 0.3) 0%, transparent 50%),
                 url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
             background-attachment: fixed;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
             margin: 0;
+            overflow: hidden; /* Screen se bahar content nahi jayega */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .glass-panel {
@@ -28,7 +29,7 @@
         }
 
         .chat-box {
-            background: rgba(11, 12, 21, 0.6); 
+            background: rgba(11, 12, 21, 0.45); 
             backdrop-filter: blur(25px);
             border-left: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -61,81 +62,78 @@
         }
     </style>
 </head>
-<body class="text-white overflow-x-hidden">
+<body class="text-white">
 
-    <div class="flex flex-col lg:flex-row min-h-screen">
-        <div class="w-full lg:w-1/2 p-6 md:p-12 lg:p-16 flex flex-col justify-center space-y-8 lg:space-y-12">
-            <div class="flex items-center space-x-4 md:space-x-6">
-                <div class="bg-indigo-600 p-3 md:p-4 rounded-2xl shadow-lg shadow-indigo-900/50">
-                    <i class="fas fa-hospital-alt text-2xl md:text-3xl"></i>
+    <div class="flex h-screen w-full">
+        <div class="w-1/2 p-10 xl:p-16 flex flex-col justify-center space-y-8 overflow-hidden">
+            <div class="flex items-center space-x-6">
+                <div class="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-900/50 shrink-0">
+                    <i class="fas fa-hospital-alt text-3xl"></i>
                 </div>
-                <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold italic tracking-tighter">
-                    Vitalis AI <span class="text-gray-500 text-xl md:text-3xl lg:text-4xl not-italic">- Hospital Edition</span>
+                <h1 class="text-5xl xl:text-6xl font-bold italic tracking-tighter truncate">
+                    Vitalis AI <span class="text-gray-500 text-3xl xl:text-4xl not-italic">- Hospital Edition</span>
                 </h1>
             </div>
 
             <div class="space-y-6">
-                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
+                <h2 class="text-4xl xl:text-5xl font-extrabold leading-tight">
                     Innovate your <span class="text-indigo-400">Patient</span><br>
                     Outcomes with Vitalis AI.
                 </h2>
-                <p class="text-gray-400 text-lg md:text-xl max-w-xl leading-relaxed">
+                <p class="text-gray-400 text-lg xl:text-xl max-w-xl leading-relaxed">
                     A complete platform for integrated hospital intelligence, AI-assisted diagnostics, and optimized operational workflows.
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-8">
-                <div class="glass-panel p-6 lg:p-8">
+            <div class="flex space-x-6">
+                <div class="glass-panel p-6 flex-1 max-w-[280px]">
                     <i class="fas fa-bolt text-yellow-400 text-xl mb-3"></i>
-                    <h4 class="text-lg md:text-xl font-bold mb-2">Optimized Admin</h4>
-                    <p class="text-sm text-gray-500">Streamline scheduling and resource allocation.</p>
+                    <h4 class="text-lg font-bold mb-1">Optimized Admin</h4>
+                    <p class="text-xs text-gray-500">Streamline scheduling and resource allocation.</p>
                 </div>
-                <div class="glass-panel p-6 lg:p-8">
+                <div class="glass-panel p-6 flex-1 max-w-[280px]">
                     <i class="fas fa-star text-indigo-400 text-xl mb-3"></i>
-                    <h4 class="text-lg md:text-xl font-bold mb-2">Diagnostic Assistance</h4>
-                    <p class="text-sm text-gray-500">Utilize advanced AI models for early detection.</p>
+                    <h4 class="text-lg font-bold mb-1">Diagnostic Assistance</h4>
+                    <p class="text-xs text-gray-500">Utilize advanced AI models for early detection.</p>
                 </div>
             </div>
         </div>
 
-        <div class="w-full lg:w-1/2 chat-box flex flex-col p-6 md:p-10 min-h-[600px] lg:h-screen">
-            <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div class="w-1/2 chat-box flex flex-col p-8 xl:p-12 h-full border-l border-white/10">
+            <div class="flex justify-between items-center mb-6 shrink-0">
                 <div class="flex items-center space-x-4">
                     <div class="text-indigo-400 drop-shadow-[0_0_10px_rgba(129,140,248,0.6)]">
-                        <i class="fas fa-comment-medical text-3xl md:text-4xl"></i>
+                        <i class="fas fa-comment-medical text-3xl xl:text-4xl"></i>
                     </div>
-                    <h3 class="text-2xl md:text-3xl font-semibold tracking-tight">Vitalis AI <span class="text-gray-400 font-light text-xl md:text-2xl">- Chat</span></h3>
+                    <h3 class="text-2xl xl:text-3xl font-semibold tracking-tight uppercase">Vitalis AI <span class="text-gray-400 font-light text-xl xl:text-2xl">- Chat</span></h3>
                 </div>
                 
-                <div class="flex items-center space-x-2 md:space-x-3">
-                    <div class="bg-gray-800/50 p-2 md:p-3 rounded-full text-gray-400">
-                        <i class="fab fa-google text-red-500 text-base md:text-lg"></i>
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gray-800/50 p-2 xl:p-3 rounded-full text-gray-400">
+                        <i class="fab fa-google text-red-500"></i>
                     </div>
-                    <div class="bg-gray-800/50 px-3 md:px-4 py-2 rounded-full flex items-center space-x-2 text-gray-400">
-                        <i class="fas fa-phone-alt text-blue-400 text-xs"></i>
-                        <span class="text-xs font-semibold uppercase tracking-wider text-gray-300">Mobile</span>
-                    </div>
-                    <div class="bg-gray-800/50 p-2 md:p-3 rounded-full text-gray-400">
-                        <i class="fas fa-user text-base md:text-lg"></i>
+                    <div class="bg-gray-800/50 px-4 py-2 rounded-full flex items-center space-x-3 text-gray-400">
+                        <i class="fas fa-phone-alt text-blue-400 text-sm"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Mobile</span>
                     </div>
                 </div>
             </div>
 
-            <button onclick="makeCall()" id="callBtn" class="btn-green w-full py-4 md:py-5 rounded-2xl text-lg md:text-xl font-bold flex items-center justify-center space-x-4 mb-8 shadow-lg border border-green-600/30">
+            <button onclick="makeCall()" id="callBtn" class="btn-green w-full py-4 rounded-2xl text-lg xl:text-xl font-bold flex items-center justify-center space-x-4 mb-6 shadow-lg shrink-0">
                 <span>CALL WITH AGENT</span>
                 <i class="fas fa-phone-alt"></i>
             </button>
 
-            <div id="chatWindow" class="flex-grow overflow-y-auto custom-scroll space-y-6 mb-8 pr-2">
-                </div>
+            <div id="chatWindow" class="flex-grow overflow-y-auto custom-scroll space-y-4 mb-6 pr-2">
+            </div>
 
-            <div class="relative">
+            <div class="relative shrink-0">
                 <input type="text" id="userInput" 
-                       class="w-full bg-gray-900/80 border border-gray-700 rounded-2xl py-4 md:py-5 px-6 md:px-8 focus:outline-none focus:border-indigo-500 text-white text-base md:text-lg placeholder-gray-500 shadow-2xl" 
+                       class="w-full bg-gray-900/80 border border-gray-700 rounded-2xl py-4 px-6 focus:outline-none focus:border-indigo-500 text-white placeholder-gray-500" 
                        placeholder="Type your query here..."
                        onkeypress="if(event.key === 'Enter') sendMessage()">
-                <button onclick="sendMessage()" class="absolute right-6 top-4 md:top-5 text-indigo-400 hover:text-white transition-colors">
-                    <i class="fas fa-paper-plane text-xl md:text-2xl"></i>
+                <button onclick="sendMessage()" class="absolute right-6 top-4 text-indigo-400 hover:text-white transition-colors">
+                    <i class="fas fa-paper-plane text-xl"></i>
                 </button>
             </div>
         </div>
@@ -143,7 +141,7 @@
 
     <script>
         let sessionId = null;
-        const API_URL = 'http://51.21.161.134:8000'; // Backend URL
+        const API_BASE = 'http://51.21.161.134:8000'; // Centralized URL
 
         window.onload = async function() {
             localStorage.removeItem('chat_session_id');
@@ -151,7 +149,7 @@
             chatWindow.innerHTML = ''; 
 
             try {
-                const response = await fetch(`${API_URL}/agent/talk`, {
+                const response = await fetch(`${API_BASE}/agent/talk`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: "", session_id: null })
@@ -163,7 +161,6 @@
                 addMessage('assistant', data.reply);
             } catch (error) {
                 console.error("Initial Greeting Error:", error);
-                addMessage('assistant', "I'm having trouble connecting to the server. Please check your backend.");
             }
         };
 
@@ -172,17 +169,17 @@
             const isUser = sender === 'user';
             
             const messageHtml = isUser ? `
-                <div class="flex justify-end mb-6 fade-in-up">
-                    <div class="bg-indigo-600 text-white px-5 py-3 md:px-6 md:py-4 rounded-3xl rounded-tr-none max-w-[90%] md:max-w-[80%] shadow-xl">
+                <div class="flex justify-end mb-4 fade-in-up">
+                    <div class="bg-indigo-600 text-white px-5 py-3 rounded-2xl rounded-tr-none max-w-[85%] shadow-md">
                         <p class="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">You</p>
-                        <p class="text-sm md:text-base leading-relaxed">${text}</p>
+                        <p class="text-sm xl:text-base leading-relaxed">${text}</p>
                     </div>
                 </div>
             ` : `
-                <div class="flex justify-start mb-6 fade-in-up">
-                    <div class="bg-gray-800/80 text-white px-5 py-3 md:px-6 md:py-4 rounded-3xl rounded-tl-none max-w-[90%] md:max-w-[80%] border border-gray-700 shadow-xl backdrop-blur-sm">
+                <div class="flex justify-start mb-4 fade-in-up">
+                    <div class="bg-gray-800/80 text-white px-5 py-3 rounded-2xl rounded-tl-none max-w-[85%] border border-gray-700 shadow-md backdrop-blur-sm">
                         <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Vitalis Assistant</p>
-                        <p class="text-sm md:text-base leading-relaxed">${text}</p>
+                        <p class="text-sm xl:text-base leading-relaxed">${text}</p>
                     </div>
                 </div>
             `;
@@ -200,7 +197,7 @@
             input.value = '';
 
             try {
-                const response = await fetch(`${API_URL}/agent/talk`, {
+                const response = await fetch(`${API_BASE}/agent/talk`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message, session_id: sessionId })
@@ -211,7 +208,7 @@
                 addMessage('assistant', data.reply);
             } catch (error) {
                 console.error("Chat Error:", error);
-                addMessage('assistant', "Sorry, I couldn't reach the backend server.");
+                addMessage('assistant', "Connection lost. Please check server.");
             }
         }
 
@@ -222,16 +219,8 @@
             btn.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/make-call`);
+                const response = await fetch(`${API_BASE}/make-call`);
                 const data = await response.json();
                 alert("Call Initiated! SID: " + data.call_sid);
             } catch (error) {
-                alert("Failed to initiate call. Check if backend is running.");
-            } finally {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
+                alert("Failed to initiate
