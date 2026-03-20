@@ -114,15 +114,18 @@ jobs:
             fi
             
             cd /home/ubuntu/Hospital-AI-Assistance
+
             git pull origin main
-            
+
+            sudo apt update && sudo apt install -y python3-pip
+
             # Environment setup
-            pip install -r requirements.txt
+
+            pip3 install --no-cache-dir -r requirements.txt
             
             # Gunicorn restart logic (Safe restart)
             pkill -f gunicorn || true
             sleep 2
             
             # Gunicorn run command
-            # Note: Path check kar lein 'which gunicorn' se EC2 par
             /home/ubuntu/.local/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --daemon --bind 0.0.0.0:8000
