@@ -117,19 +117,13 @@ jobs:
 
             git pull origin main
 
-            sudo apt update && sudo apt install -y python3-venv
-            python3 -m venv venv
-
-            # Environment setup
-
-            ./venv/bin/pip install --upgrade pip
-            ./venv/bin/pip install -r requirements.txt
-
-            
-            
+            sudo apt update
+            sudo apt install -y python3-pip gunicorn uvicorn
+            pip3 install -r requirements.txt --break-system-packages
+                
             # Gunicorn restart logic (Safe restart)
-            pkill -f gunicorn || true
+            sudo fuser -k 8000/tcp || true
             sleep 2
             
             # Gunicorn run command
-            ./venv/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --daemon --bind 0.0.0.0:8000
+            nohup gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --daemon --bind 0.0.0.0:8000 > gunicorn.log 2>&1 &
