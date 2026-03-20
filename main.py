@@ -31,7 +31,7 @@ app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://hospital-handler-bucket.s3-website.eu-north-1.amazonaws.com"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -258,7 +258,7 @@ MY_NUMBER = os.getenv("MY_NUMBER")
 BASE_URL = os.getenv("BASE_URL")
 
 
-@app.get("/make-call")
+@app.post("/make-call")
 def make_call():
 
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
