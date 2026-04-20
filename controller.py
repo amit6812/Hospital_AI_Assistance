@@ -14,9 +14,42 @@ from google_sheets_utils import log_booking
 import random
 import dateparser
 
-# ---------------------------------------------------
+
+# Greeting Message Generator
+
+def greeting_message() -> str:
+    hospital = random.choice(HOSPITALS)
+    return (
+        f"Hello! You are speaking with {hospital}. "
+        f"Please tell me what can I assist you with today."
+    )
+
+# Random Hospitals
+
+HOSPITALS = [
+    "CityCare Hospital",
+    "LifeLine Medical Center",
+    "Sunrise Multispeciality Hospital",
+    "HealthyWay Clinic",
+    "Green Valley Hospital"
+]
+
+
+#TEXT NORMALIZATION
+
+def normalize_speech_text(text: str):
+
+    if not text:
+        return text
+
+    text = text.lower()
+    text = text.replace("p.m.", "PM")
+    text = text.replace("a.m.", "AM")
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
 # Helper: Get Available Doctors for Specialist
-# ---------------------------------------------------
 
 def get_available_doctors(specialist: str):
     data = load_data()
@@ -43,9 +76,8 @@ def get_available_doctors(specialist: str):
     return available
 
 
-# ---------------------------------------------------
 # Helper: Get Next Available Slots
-# ---------------------------------------------------
+
 
 def get_doctor_availability(doc):
     today = datetime.now()
@@ -78,30 +110,7 @@ def get_doctor_availability(doc):
     return available_list
 
 
-# ---------------------------------------------------
-# Hospitals
-# ---------------------------------------------------
-
-HOSPITALS = [
-    "CityCare Hospital",
-    "LifeLine Medical Center",
-    "Sunrise Multispeciality Hospital",
-    "HealthyWay Clinic",
-    "Green Valley Hospital"
-]
-
-
-def greeting_message() -> str:
-    hospital = random.choice(HOSPITALS)
-    return (
-        f"Hello! You are speaking with {hospital}. "
-        f"Please tell me what can I assist you with today."
-    )
-
-
-# ---------------------------------------------------
 # NEW: Direct Appointment Intent Detector
-# ---------------------------------------------------
 
 def is_direct_appointment_request(msg: str) -> bool:
     keywords = [
@@ -132,9 +141,9 @@ def normalize_mobile_number(mobile:str)->str:
     number = re.findall(r"\d", mobile)
     return "".join(number)
 
-# ---------------------------------------------------
+
 # Helper: Repeat Request Detector
-# ---------------------------------------------------
+
 
 def is_repeat_request(msg: str) -> bool:
     msg = msg.lower()
@@ -153,9 +162,8 @@ def is_repeat_request(msg: str) -> bool:
     ])
 
 
-# ---------------------------------------------------
+\
 # Helper: Universal Repeat Handler
-# ---------------------------------------------------
 
 def handle_repeat(session):
 
@@ -223,18 +231,14 @@ async def handle_message(session, db, user_msg):
 
     msg = user_msg.lower().strip()
 
-     # =================================================
      # REPEAT HANDLER (GLOBAL)
-     # =================================================
 
     if is_repeat_request(msg):
         repeat_response = handle_repeat(session)
         if repeat_response:
             return repeat_response
 
-    # =================================================
     # GLOBAL COMMANDS
-    # =================================================
 
     if "reschedule" in msg:
         session.stage = "RESCHEDULE_ID"
@@ -246,9 +250,8 @@ async def handle_message(session, db, user_msg):
         await db.commit()
         return "Please provide your Booking ID to cancel."
 
-    # =================================================
+
     # GREETING
-    # =================================================
 
     if session.stage == "GREETING":
 
@@ -261,9 +264,9 @@ async def handle_message(session, db, user_msg):
         await db.commit()
         return greeting_message()
 
-    # =================================================
+ 
     # DIRECT SPECIALIST FLOW
-    # =================================================
+
 
     if session.stage == "DIRECT_SPECIALIST":
 
@@ -291,9 +294,8 @@ async def handle_message(session, db, user_msg):
 
         return reply
 
-    # =================================================
     # SYMPTOM TRIAGE FLOW (AI)
-    # =================================================
+
 
     if session.stage == "ASK_SYMPTOM":
 
@@ -318,13 +320,6 @@ async def handle_message(session, db, user_msg):
             session.stage = "CONFIRM_APPOINTMENT"
             await db.commit()
 
-            #doctors = get_available_doctors(specialist)
-
-            # if not doctors:
-            #     return f"Sorry, no {specialist} is currently available."
-
-            # session.stage = "CHOOSE_DOCTOR"
-            # await db.commit()
 
             clean_reply = ai_reply.replace(f"SUGGEST_DOCTOR:{specialist}", "").strip()
             return f"{clean_reply}\n\nWould you like to book an appointment with our {specialist}? Please say YES to confirm or NO to decline."
@@ -352,7 +347,7 @@ async def handle_message(session, db, user_msg):
                     f"\n and his consultation charges are ₹{d['fee']}"
                 )
             reply += "\n\nPlease tell me which doctor you would like to take an appointment with."
-               # reply += "\n\nSo Which doctor would you like to take an appointment?"
+
 
             return reply
         else:
@@ -360,9 +355,7 @@ async def handle_message(session, db, user_msg):
             await db.commit()
             return "No problem! Let me know if you need anything else. Take care!"
 
-        #return ai_reply
 
-    # =================================================
     # DOCTOR SELECTION
 
     if session.stage == "CHOOSE_DOCTOR":
@@ -411,14 +404,8 @@ async def handle_message(session, db, user_msg):
         for item in availability:
             reply += f"\n date {item['date']} and time {', '.join(item['slots'])}"
 
-        # reply += (
-        #     f"\n\nPlease type Date and Time "
-        #     f"(Example: {availability[0]['date']} at {availability[0]['slots'][0]})."
-        # )
-
         return reply
 
-    # =================================================
     # SLOT SELECTION (FIXED SECTION)
 
     if session.stage == "SHOW_SLOTS":
@@ -428,17 +415,9 @@ async def handle_message(session, db, user_msg):
             return "I could not understand please saylike this, Example: 25 feb at 11 AM"
         
 
-
-        # pattern = r"(\d{2}/\d{2}/\d{2})[:\s]*at\s*(\d{1,2}:\d{2}\s*(AM|PM))"
-
-        # match = re.search(pattern, user_msg, re.IGNORECASE)
-
-        # if not match:
-        #     return "Please type in format: DD/MM/YY at HH:MM AM/PM\nExample: 25/02/26 at 11:00 AM"
-
         date_input = date.strftime("%d/%m/%y")
         time_input = date.strftime("%I:%M %p").upper().replace(" ", "")
-        #time_input = match.group(2).upper().replace(" ", "")
+
 
         valid = False
 
@@ -458,8 +437,7 @@ async def handle_message(session, db, user_msg):
         await db.commit()
 
         return "Please enter patient name:"
-
-    # =================================================
+    
     # PATIENT DETAILS FLOW
     
 
@@ -484,8 +462,6 @@ async def handle_message(session, db, user_msg):
 
         if len(phone) < 10 or len(phone) > 15:
             return "Please enter valid mobile number with country code if applicable."
-        # if not user_msg.isdigit() or len(user_msg) < 10:
-        #     return "Please enter valid mobile number."
 
         session.patient_mobile = phone
         session.stage = "ASK_ADDRESS"
@@ -510,13 +486,11 @@ async def handle_message(session, db, user_msg):
             "'YES, confirm my appointment' or 'No, cancel it.'"
         )
 
-    # =================================================
+
     # CONFIRM BOOKING
-    # =================================================
 
     if session.stage == "CONFIRM_DETAILS":
 
-        #if msg == "yes":
         if confirmation_yes(msg):
             success, booking_id = book_slot(
                 session.temp_doctor_id,
@@ -553,7 +527,6 @@ async def handle_message(session, db, user_msg):
                 f"Thank you!"
             )
 
-        #if msg == "no":
         elif confirmation_no(msg):
             session.stage = "GREETING"
             await db.commit()

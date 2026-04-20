@@ -10,7 +10,7 @@ import re
 import sys
 from db import AsyncSessionLocal, engine, Base
 from models import ChatSession
-from controller import handle_message, greeting_message
+from controller import handle_message, greeting_message, normalize_speech_text
 from speaker import make_voice_friendly
 from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.rest import Client
@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Hospital Voice Agent", lifespan=lifespan)
 
 
+# middleware
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,11 +37,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 # ---------- UI STATIC FILES ----------
 
 if os.path.exists("frontend"):
     app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
+
+#set home route to serve the UI
 
 @app.get("/", response_class=HTMLResponse)
 async def ui():
@@ -72,19 +77,7 @@ def invoke():
     return {"message": "model working"}
 
 
-# ---------- TEXT NORMALIZATION ----------
 
-def normalize_speech_text(text: str):
-
-    if not text:
-        return text
-
-    text = text.lower()
-    text = text.replace("p.m.", "PM")
-    text = text.replace("a.m.", "AM")
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
 
 
 # ---------- CHAT ENDPOINT ----------
@@ -99,10 +92,8 @@ async def agent_talk(data: AgentRequest):
         if not current_session_id or current_session_id == "null":
             current_session_id = str(uuid.uuid4())
             is_new_session = True
-        # else:
-        #     session_id = data.session_id
-
-        # session_id = data.session_id or str(uuid.uuid4())
+        
+        
 
         result = await db.execute(
             select(ChatSession).where(ChatSession.session_id == current_session_id)
@@ -132,11 +123,6 @@ async def agent_talk(data: AgentRequest):
                 "session_id": current_session_id
             }
 
-        # if not data.message or not data.message.strip():
-        #     return {
-        #         "reply": "Please tell me your health concern.",
-        #         "session_id": session_id
-        #     }
 
         reply = await handle_message(session, db, data.message)
 
@@ -258,11 +244,15 @@ MY_NUMBER = os.getenv("MY_NUMBER")
 BASE_URL = os.getenv("BASE_URL")
 
 
+# This endpoint is just for testing the call flow. In production, you would trigger calls based on your requirements.
+
 @app.post("/make-call")
 def make_call():
 
+    # Client Initialization
     client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
+    # Make the call
     call = client.calls.create(
         to=MY_NUMBER,
         from_=TWILIO_NUMBER,
@@ -272,7 +262,7 @@ def make_call():
     return {"status": "Call initiated", "call_sid": call.sid}
 
 
-# ---------- SERVER ----------
+# ---------- SERVER Execution ----------
 
 if __name__ == "__main__":
 
