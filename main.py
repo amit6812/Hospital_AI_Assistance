@@ -113,7 +113,7 @@ async def agent_talk(data: AgentRequest):
             db.add(session)
             await db.commit()
             await db.refresh(session)
-            is_new_session = True   #------------------------
+            is_new_session = True   
 
         if is_new_session:
             reply = greeting_message()
